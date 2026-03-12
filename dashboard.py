@@ -22,7 +22,7 @@ mode = st.sidebar.radio("Mode", ["🎮 Demo Mode", "🔴 Live Mode"])
 st.sidebar.divider()
 st.sidebar.markdown("**Program Pulse** monitors your JIRA epics and stories, sends proactive due-date reminders, and escalates overdue items to leadership with AI-generated summaries.")
 st.sidebar.divider()
-st.sidebar.markdown("[GitHub](https://github.com/YOURUSERNAME/program-pulse) | [LinkedIn](https://linkedin.com/in/sss90)")
+st.sidebar.markdown("[GitHub](https://github.com/muns3090-lab/program-pulse) | [LinkedIn](https://linkedin.com/in/sss90)")
 
 if "🎮 Demo" in mode:
     from demo.fake_data import FAKE_ISSUES, FAKE_CONFIG
