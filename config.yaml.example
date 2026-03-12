@@ -1,0 +1,23 @@
+jira:
+  base_url: "https://yourcompany.atlassian.net"
+  email: "you@yourcompany.com"
+  api_token: "${JIRA_API_TOKEN}"
+  project_keys: ["PLAT", "INFRA"]
+  at_risk_label: "AT-RISK"
+
+confluence:
+  base_url: "https://yourcompany.atlassian.net/wiki"
+  api_token: "${JIRA_API_TOKEN}"
+  status_page_id: "123456789"
+
+notifications:
+  email_provider: "sendgrid"
+  from_address: "pulse@yourcompany.com"
+  leader_emails:
+    - "vp-engineering@yourcompany.com"
+    - "program-director@yourcompany.com"
+
+schedule:
+  timezone: "America/Los_Angeles"
+  reminder_hour: 8
+  escalation_days_overdue: 2
