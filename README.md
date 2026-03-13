@@ -7,161 +7,179 @@
 [![Runs on GitHub Actions](https://img.shields.io/badge/scheduled-GitHub%20Actions-2088FF.svg)](https://github.com/features/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[▶ Live Demo](https://program-pulse.streamlit.app/) |
- **[LinkedIn](https://linkedin.com/in/sss90)**
+**[▶ Live Demo](https://program-pulse.streamlit.app)** | **[LinkedIn](https://linkedin.com/in/sss90)**
 
 ---
 
 ## The Problem
 
-Every Technical Program Manager knows this tax: manually scanning JIRA for overdue items, writing status emails to assignees, drafting leadership escalations, and keeping Confluence status pages from going stale. It's repetitive, it's time-consuming, and it's exactly the kind of work that falls through the cracks when things get busy.
+Every Technical Program Manager knows this tax: manually scanning JIRA for overdue items, chasing assignees for updates, drafting leadership escalations, and keeping Confluence status pages from going stale.
 
-The irony is that this is precisely the work that matters most when a program is at risk — and it's hardest to do consistently when you're already underwater.
-
----
-
-## What Program Pulse Does
-
-Program Pulse runs every morning as a scheduled agent. It checks your JIRA project, classifies every epic and story by health status, and takes action automatically:
-
-**Day 0 — Item is due today:**
-Sends the assignee a direct email reminder with the ticket details and a link to update it.
-
-**Day +1 — Item is overdue, no update:**
-Sends the assignee a follow-up asking for a status comment. Flags the item internally.
-
-**Day +2 and beyond — Still no update:**
-Generates an AI-written escalation summary using Claude, emails it to your leadership list, adds an `AT-RISK` label to the JIRA ticket, drops a comment on the ticket, and updates your Confluence status page — all in one run.
+It's repetitive, time-consuming, and — ironically — hardest to do consistently when a program is already at risk and you need it most.
 
 ---
 
-## Demo
+## What It Does
 
-> No credentials needed. Run this immediately after cloning.
+Program Pulse runs every morning as a scheduled agent. It checks your JIRA projects, classifies every epic and story by health status, and takes the right action automatically based on how overdue each item is.
+
+| Scenario | What Program Pulse Does |
+|---|---|
+| Item due today | Sends assignee a direct reminder email with ticket details and JIRA link |
+| 1 day overdue, no update | Sends assignee a follow-up asking for a structured status comment |
+| 2+ days overdue, still no update | Generates AI escalation summary → emails leadership → labels ticket AT-RISK → updates Confluence |
+| Already escalated within 7 days | Skips — no repeat emails to leadership until the cooldown window passes |
+
+### The leadership escalation email is structured, not generic
+
+Rather than a boilerplate "ticket is overdue" notice, Claude reads the actual ticket context and latest JIRA comments to generate a structured summary with four sections every leader wants:
+
+- **Quick Summary** — what's at risk and for how long
+- **Current Blockers** — specific reasons for the delay based on ticket context
+- **What Is Needed** — concrete, actionable asks of leadership
+- **Business Value If Not Done** — delivery, compliance, or operational risk
+
+### The assignee follow-up prompts a standard update format
+
+Overdue assignees receive an email that asks them to post a comment in JIRA using a consistent format:
+
+```
+Quick Summary: [1-2 sentences on current status]
+Current Blockers: [What is blocking, or "None"]
+```
+
+This keeps program data structured and makes the AI escalation summaries more accurate.
+
+---
+
+## Live Demo
+
+No credentials needed. Run this immediately after cloning:
 
 ```bash
 python main.py --demo
 ```
 
-You'll see a full color-coded terminal run showing exactly what the agent would do against a realistic fake program dataset — which emails would send, what the AI escalation summary looks like, and which tickets would get flagged.
+You'll see a full color-coded terminal run against a realistic fake program dataset — which emails would fire, the AI escalation summary, which tickets get flagged, and the 7-day cooldown logic in action.
+
+Or open the **[live Streamlit dashboard](https://program-pulse.streamlit.app)** to see the demo in your browser with no setup.
 
 ```
 📡 Program Pulse — Demo Mode
-Running against simulated JIRA data. No real credentials needed.
 
 📅 Today's date: 2024-11-18
 
-┌──────────┬──────────────────────────────────────────────┬───────────────┬──────────────────────┐
-│ Key      │ Summary                                      │ Assignee      │ Status               │
-├──────────┼──────────────────────────────────────────────┼───────────────┼──────────────────────┤
-│ PLAT-101 │ Migrate authentication service to OAuth 2.0  │ Alex Chen     │ 📌 Due Today         │
-│ PLAT-102 │ Complete API gateway load testing            │ Maria Lopez   │ 📌 Due Today         │
-│ PLAT-103 │ ServiceNow-Workday integration UAT sign-off  │ James Park    │ 🟡 Follow-up Needed  │
-│ PLAT-104 │ Decommission legacy CMDB → ServiceNow CSDM  │ Sara Williams │ 🔴 At Risk           │
-│ INFRA-201│ Zero-trust network segmentation — Phase 2    │ Derek Johnson │ 🔴 At Risk           │
-│ PLAT-105 │ Copilot AI integration with ServiceNow       │ Alex Chen     │ 🟢 On Track          │
-│ INFRA-202│ Cloud cost optimization — rightsizing        │ Maria Lopez   │ 🟢 On Track          │
-└──────────┴──────────────────────────────────────────────┴───────────────┴──────────────────────┘
+  Key        Summary                                      Assignee       Due Date    Status
+  PLAT-101   Migrate auth service to OAuth 2.0            Alex Chen      2024-11-18  📌 Due Today
+  PLAT-102   Complete API gateway load testing            Maria Lopez    2024-11-18  📌 Due Today
+  PLAT-103   ServiceNow-Workday integration UAT sign-off  James Park     2024-11-17  🟡 Follow-up Needed
+  PLAT-104   Decommission legacy CMDB → ServiceNow CSDM  Sara Williams  2024-11-15  🔴 AT RISK
+  INFRA-201  Zero-trust network segmentation — Phase 2   Derek Johnson  2024-11-14  🔴 AT RISK
+  PLAT-105   Copilot AI integration with ServiceNow       Alex Chen      2024-11-25  🟢 On Track
+  INFRA-202  Cloud cost optimization — rightsizing        Maria Lopez    2024-12-02  🟢 On Track
 
-⚠ AT RISK — ESCALATING (2 tickets)
-  → PLAT-104: Decommission legacy CMDB → ServiceNow CSDM (3 days overdue)
-  → INFRA-201: Zero-trust network segmentation — Phase 2 (4 days overdue)
+⚠  AT RISK — ESCALATING (2 tickets)
 
-🤖 Generating AI escalation summary...
+🤖 Generating AI escalation summary from ticket context + latest comments...
 
-╔══════════════════════════════════════════════════════════════════════════════════╗
-║  AI-Generated Leadership Escalation                                              ║
-║                                                                                  ║
-║  Two critical platform initiatives are currently at risk of missing their        ║
-║  delivery commitments. The CMDB migration to ServiceNow CSDM (PLAT-104) has    ║
-║  been stalled for 3 days with no status update, with an apparent dependency     ║
-║  on the Network team for CI discovery completion that may require leadership     ║
-║  intervention. The zero-trust segmentation initiative (INFRA-201) is 4 days    ║
-║  overdue and was last flagged as pending a security architecture review from     ║
-║  the CISO office...                                                              ║
-╚══════════════════════════════════════════════════════════════════════════════════╝
+  ╔══════════════════════════════════════════════════════════════════╗
+  ║  Leadership Escalation — AI Generated                           ║
+  ║                                                                  ║
+  ║  Quick Summary                                                   ║
+  ║  Two critical platform initiatives are 3–4 days overdue with    ║
+  ║  no assignee updates. Both carry hard dependencies on external  ║
+  ║  teams that appear to be unresolved.                            ║
+  ║                                                                  ║
+  ║  Current Blockers                                               ║
+  ║  • PLAT-104: Network team backlogged on CI discovery scan       ║
+  ║  • INFRA-201: CISO security architecture review not scheduled   ║
+  ║                                                                  ║
+  ║  What Is Needed                                                  ║
+  ║  • Leadership to unblock Network team prioritization            ║
+  ║  • Someone to escalate CISO review scheduling for INFRA-201    ║
+  ║                                                                  ║
+  ║  Business Value If Not Done                                      ║
+  ║  Delay to CMDB migration risks audit compliance gaps in Q4.     ║
+  ║  Zero-trust delay extends production exposure window.           ║
+  ╚══════════════════════════════════════════════════════════════════╝
 
-✅ Demo run complete
+  Next escalation for these tickets: 7 days from today
 ```
-
-**Or open the live dashboard:** [program-pulse.streamlit.app](https://program-pulse.streamlit.app)
 
 ---
 
 ## Connecting Your Organization
 
-Setup takes about 5 minutes. You need a JIRA Cloud instance, a Confluence page to write to, and a SendGrid account (free tier covers 100 emails/day).
+Setup takes about 5 minutes. You need a JIRA Cloud instance, a Confluence page to write status updates to, a [SendGrid account](https://sendgrid.com) (free tier: 100 emails/day), and an [Anthropic API key](https://console.anthropic.com).
 
-### 1. Clone and install
+### Step 1 — Clone and install
 
-```bash
+```powershell
+# Windows PowerShell
 git clone https://github.com/muns3090-lab/program-pulse.git
 cd program-pulse
-
-# Windows PowerShell
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+```
 
-# Mac/Linux
-python -m venv venv
-source venv/bin/activate
+```bash
+# Mac / Linux
+git clone https://github.com/muns3090-lab/program-pulse.git
+cd program-pulse
+python -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Run the setup wizard
+### Step 2 — Run the setup wizard
 
 ```bash
 python setup.py
 ```
 
-This walks you through entering your credentials, tests each connection live, and writes your `config.yaml` and `.env` automatically.
+The wizard prompts for each credential, tests the connection live, and writes `config.yaml` and `.env` automatically.
 
-### 3. Validate everything works
+### Step 3 — Validate everything
 
 ```bash
 python validate_connections.py
 ```
 
 ```
-✅ JIRA connection: OK (yourcompany.atlassian.net)
-✅ Confluence connection: OK (Page: Program Health Dashboard)
-✅ SendGrid: OK (test email delivered)
-✅ Anthropic API: OK
+✅ JIRA connection OK  →  yourcompany.atlassian.net
+✅ Confluence connection OK  →  Program Health Dashboard
+✅ SendGrid OK  →  test email delivered
+✅ Anthropic API OK
 ```
 
-### 4. Run it
+### Step 4 — Run
 
 ```bash
 python main.py
 ```
 
-### 5. Schedule it (optional)
+### Step 5 — Schedule it (optional but recommended)
 
-Push to GitHub, add your secrets in repo Settings → Secrets, and the included GitHub Actions workflow handles the rest. Runs automatically every weekday at 8am. No server needed.
+Push to GitHub, add your credentials under repo Settings → Secrets → Actions, and the included GitHub Actions workflow runs the agent every weekday at 8am automatically. No server or cron job needed.
 
 ---
 
-## Configuration
-
-One file controls everything for your org:
-
-```bash
-cp config.yaml.example config.yaml
-```
+## Configuration Reference
 
 ```yaml
+# config.yaml — copy from config.yaml.example
+
 jira:
   base_url: "https://yourcompany.atlassian.net"
   email: "you@yourcompany.com"
-  project_keys: ["PLAT", "INFRA"]       # which projects to monitor
+  project_keys: ["PLAT", "INFRA"]       # which JIRA projects to monitor
   at_risk_label: "AT-RISK"
 
 confluence:
   status_page_id: "123456789"           # from your Confluence page URL
 
 notifications:
-  email_provider: "sendgrid"            # sendgrid | smtp | ses
+  email_provider: "sendgrid"
   from_address: "pulse@yourcompany.com"
   leader_emails:
     - "vp-engineering@yourcompany.com"
@@ -171,39 +189,57 @@ schedule:
   timezone: "America/Los_Angeles"
   reminder_hour: 8
   escalation_days_overdue: 2            # days before escalating to leaders
+  escalation_cooldown_days: 7           # days before re-escalating same ticket
 ```
 
-Sensitive credentials live in `.env` only and are never committed to the repo.
+Sensitive keys live in `.env` only and are never committed to the repo.
 
 ---
 
-## How It Works
+## How the Escalation Cooldown Works
+
+Program Pulse tracks every escalation in a local `state.json` file. When an at-risk ticket is escalated, the date is recorded. On subsequent runs, the agent checks whether 7 days have passed before sending another leadership email.
+
+- Leadership gets notified when something first goes at risk
+- They don't get repeat emails every day for the same item
+- After 7 days, if still unresolved, a fresh escalation fires with updated context pulled from any new comments
+- When a ticket is resolved or closed, its entry is cleared automatically
+
+The `state.json` file is preserved between GitHub Actions runs via the Actions cache, so the cooldown works correctly across daily scheduled runs.
+
+---
+
+## Architecture
 
 ```
-GitHub Actions (runs daily 8am local time)
-         │
-         ▼
-   main.py agent
-         │
-         ├─→ JIRA API
-         │     └─ Fetch all epics/stories with due dates
-         │     └─ Classify: Due Today / Follow-up / At Risk
-         │
-         ├─→ SendGrid
-         │     └─ Assignee reminder (due today)
-         │     └─ Assignee follow-up (1 day overdue)
-         │     └─ Leadership escalation (2+ days, no update)
-         │
-         ├─→ Claude API
-         │     └─ Generate plain-English escalation summary
-         │         (what's at risk, why, what help is needed)
-         │
-         ├─→ JIRA API
-         │     └─ Add AT-RISK label to overdue tickets
-         │     └─ Drop comment on ticket with escalation notice
-         │
-         └─→ Confluence API
-               └─ Rewrite status page with current health table
+GitHub Actions (runs daily at 8am)
+        │
+        ▼
+  main.py orchestrator
+        │
+        ├─→ src/jira_client.py
+        │       Fetch all epics + stories with due dates (JQL)
+        │       Read last comment date and text per ticket
+        │       Add AT-RISK label + bot comment on escalated tickets
+        │
+        ├─→ src/scheduler.py
+        │       Classify: Due Today / Follow-up Needed / At Risk
+        │
+        ├─→ src/escalation_state.py
+        │       Check 7-day cooldown per ticket (state.json)
+        │       Mark tickets as escalated after sending
+        │
+        ├─→ src/ai_summary.py  (Claude API)
+        │       generate_escalation_summary() → 4-section leadership email
+        │       generate_overdue_context()    → assignee nudge context blurb
+        │
+        ├─→ src/notifier.py  (SendGrid)
+        │       send_due_today()   → assignee reminder on due date
+        │       send_follow_up()   → assignee follow-up with comment format
+        │       send_escalation()  → structured leadership alert
+        │
+        └─→ src/confluence_client.py
+                Rewrite status page with current health table
 ```
 
 ---
@@ -211,26 +247,63 @@ GitHub Actions (runs daily 8am local time)
 ## Design Decisions
 
 **Why GitHub Actions instead of a server?**
-Zero infrastructure cost, zero maintenance, and the workflow file lives in the repo so anyone forking this gets scheduling for free. The `workflow_dispatch` trigger also lets you run it manually anytime from the GitHub UI.
+Zero infrastructure, zero maintenance, and the workflow file lives in the repo so anyone forking this gets scheduling automatically. The `workflow_dispatch` trigger also lets you run manually from the GitHub UI anytime — useful for mid-day checks or post-deployment.
 
 **Why not just use JIRA's built-in notifications?**
-JIRA notifications are reactive and noisy. Program Pulse is proactive and selective — it only fires when something needs attention, and the escalation path (assignee → follow-up → leadership) mirrors how a good TPM actually manages a program.
+JIRA notifications are reactive and noisy — every comment and status change fires an alert. Program Pulse is proactive and selective. It only fires when something needs attention, and the escalation path mirrors how an experienced TPM actually manages a program: assignee first, then leadership only if there's no response.
 
-**Why Claude for escalation summaries instead of a template?**
-Templates produce robotic emails that people learn to ignore. Claude reads the actual ticket description, assignee context, and delay duration to write something that sounds like a real TPM wrote it — because the reasoning is genuine, not filled-in slots.
+**Why Claude for escalation summaries instead of templates?**
+Templates produce robotic emails that leaders learn to ignore. Claude reads the actual ticket descriptions and latest JIRA comments to surface real blockers and specific asks. The structured format — Quick Summary, Current Blockers, What Is Needed, Business Value — ensures every escalation email is immediately actionable for a VP or director.
 
-**Why a separate demo mode?**
-Enterprise data is sensitive. Demo mode means anyone can evaluate the tool, interviewers can see it live, and contributors can test changes without real credentials.
+**Why a 7-day escalation cooldown?**
+Daily escalation emails for the same unresolved ticket train leadership to tune them out. A weekly cadence matches how most program reviews work, and the re-escalation carries fresh context from whatever comments have been added in the interim.
+
+**Why prompt assignees to use a specific comment format?**
+Unstructured comments like "still working on it" don't help anyone. Asking for Quick Summary + Current Blockers produces structured data that feeds back into the AI escalation summary, making it more accurate over time.
 
 ---
 
 ## What I'd Build Next
 
-1. **Slack integration** — post the daily health summary to an ops channel instead of (or in addition to) email
-2. **Trend dashboard** — health score over time so you can see if a program is improving or degrading week over week
-3. **Two-way JIRA updates** — assignees reply to the notification email and it posts back to the ticket automatically
-4. **Smart snooze** — assignees reply "blocked — waiting on infra team" and Program Pulse suppresses escalation for 48 hours and flags the blocker instead
-5. **Portfolio rollup** — health view across all programs in the org, not just one JIRA project
+1. **Slack integration** — post the daily health summary to an ops channel; assignees can react with ✅ to acknowledge without leaving Slack
+2. **Smart snooze** — assignees reply "blocked — waiting on infra team ETA Friday" and the agent suppresses escalation until that date, flagging the specific blocker instead
+3. **Health trend tracking** — program health score over time so you can see whether a program is improving or degrading week over week
+4. **Two-way email-to-JIRA bridge** — assignees reply to the notification email and Program Pulse posts it back as a JIRA comment automatically
+5. **Portfolio rollup** — cross-program health view for a Director or VP overseeing multiple programs simultaneously
+
+---
+
+## Project Structure
+
+```
+program-pulse/
+├── main.py                       # orchestrator — run with --demo or live
+├── setup.py                      # interactive setup wizard
+├── validate_connections.py       # connection health checker
+├── dashboard.py                  # streamlit demo dashboard
+│
+├── src/
+│   ├── jira_client.py            # JIRA REST API v3 connector
+│   ├── confluence_client.py      # Confluence REST API connector
+│   ├── notifier.py               # SendGrid email sender (3 email types)
+│   ├── ai_summary.py             # Claude escalation + context generator
+│   ├── scheduler.py              # due date classification logic
+│   ├── escalation_state.py       # 7-day cooldown tracker (state.json)
+│   └── config_loader.py          # config.yaml + .env loader
+│
+├── demo/
+│   ├── fake_data.py              # realistic fake JIRA dataset (7 tickets)
+│   └── demo_runner.py            # demo mode orchestrator with Rich UI
+│
+├── templates/                    # HTML email templates
+│
+├── .github/workflows/
+│   └── daily_run.yml             # GitHub Actions cron scheduler
+│
+├── config.yaml.example           # copy this → config.yaml and fill in
+├── .env.example                  # copy this → .env and add API keys
+└── requirements.txt
+```
 
 ---
 
@@ -239,47 +312,20 @@ Enterprise data is sensitive. Demo mode means anyone can evaluate the tool, inte
 | Layer | Tool |
 |---|---|
 | Language | Python 3.11 |
-| AI | Anthropic Claude API (claude-sonnet-4-20250514) |
+| AI | Anthropic Claude API (`claude-sonnet-4-20250514`) |
 | JIRA + Confluence | Atlassian REST API v3 |
 | Email | SendGrid API |
 | Scheduling | GitHub Actions (cron) |
 | Dashboard | Streamlit |
 | Terminal UI | Rich |
 | Config | PyYAML + python-dotenv |
-
----
-
-## Project Structure
-
-```
-program-pulse/
-├── main.py                      # orchestrator
-├── setup.py                     # interactive setup wizard
-├── validate_connections.py      # connection health checker
-├── dashboard.py                 # streamlit demo dashboard
-├── src/
-│   ├── jira_client.py           # JIRA API connector
-│   ├── confluence_client.py     # Confluence API connector
-│   ├── notifier.py              # email sender
-│   ├── ai_summary.py            # Claude escalation generator
-│   ├── scheduler.py             # due date logic
-│   └── config_loader.py        # config + env loader
-├── demo/
-│   ├── fake_data.py             # realistic fake JIRA dataset
-│   └── demo_runner.py           # demo mode orchestrator
-├── templates/                   # HTML email templates
-├── .github/workflows/
-│   └── daily_run.yml            # GitHub Actions scheduler
-├── config.yaml.example
-├── .env.example
-└── requirements.txt
-```
+| Cost to run | < $1/month |
 
 ---
 
 ## About This Project
 
-I'm a Technical Program Manager specializing in ServiceNow and platform modernization. I built Program Pulse because I kept seeing the same problem across every large program I've worked on — the manual overhead of tracking ticket health and escalating proactively is exactly where things fall apart at scale, and it's the kind of work AI agents are well-suited to replace.
+I'm a Technical Program Manager specializing in ServiceNow and platform modernization. I built Program Pulse because I kept encountering the same problem across every large program — the manual overhead of proactive ticket health management is exactly where programs fall apart at scale, and it's precisely the kind of structured, repeatable work that AI agents handle well.
 
 This is part of a series of AI tools I'm building at the intersection of enterprise operations and applied AI. If you work in program management, platform engineering, or enterprise tooling and want to collaborate or share feedback, open an issue or connect on [LinkedIn](https://linkedin.com/in/sss90).
 
