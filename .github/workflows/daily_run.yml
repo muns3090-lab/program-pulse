@@ -2,19 +2,32 @@ name: Program Pulse Daily Run
 
 on:
   schedule:
-    - cron: '0 13 * * 1-5'
-  workflow_dispatch:
+    - cron: '0 13 * * 1-5'   # 8am EST Monday–Friday
+  workflow_dispatch:           # manual trigger for testing
 
 jobs:
   run-agent:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
+
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
+
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      # Restore escalation state from cache so cooldown persists across runs
+      - name: Restore escalation state
+        uses: actions/cache@v3
+        with:
+          path: state.json
+          key: escalation-state-${{ github.ref_name }}
+          restore-keys: |
+            escalation-state-
+
       - name: Run Program Pulse
         env:
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
@@ -24,3 +37,10 @@ jobs:
           SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
           CONFLUENCE_PAGE_ID: ${{ secrets.CONFLUENCE_PAGE_ID }}
         run: python main.py
+
+      # Save updated state after run so next run knows what was escalated
+      - name: Save escalation state
+        uses: actions/cache@v3
+        with:
+          path: state.json
+          key: escalation-state-${{ github.ref_name }}-${{ github.run_id }}

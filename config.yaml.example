@@ -21,3 +21,4 @@ schedule:
   timezone: "America/Los_Angeles"
   reminder_hour: 8
   escalation_days_overdue: 2
+  escalation_cooldown_days: 7

@@ -3,7 +3,6 @@ from datetime import date, timedelta
 today = date.today()
 
 FAKE_ISSUES = [
-    # Due today — 2 tickets
     {
         "key": "PLAT-101",
         "fields": {
@@ -15,7 +14,8 @@ FAKE_ISSUES = [
             "assignee": {"displayName": "Alex Chen", "emailAddress": "alex.chen@demo.com"},
             "labels": [],
             "description": "Full migration of legacy auth system to OAuth 2.0 with SSO support across all internal platforms.",
-            "comment": {"comments": []}
+            "comment": {"comments": []},
+            "last_comment_text": ""
         }
     },
     {
@@ -29,10 +29,10 @@ FAKE_ISSUES = [
             "assignee": {"displayName": "Maria Lopez", "emailAddress": "maria.lopez@demo.com"},
             "labels": [],
             "description": "Run load tests against the new API gateway to validate 10k RPS capacity before production cutover.",
-            "comment": {"comments": []}
+            "comment": {"comments": []},
+            "last_comment_text": ""
         }
     },
-    # Overdue 1 day — needs follow-up
     {
         "key": "PLAT-103",
         "fields": {
@@ -44,10 +44,10 @@ FAKE_ISSUES = [
             "assignee": {"displayName": "James Park", "emailAddress": "james.park@demo.com"},
             "labels": [],
             "description": "Obtain UAT sign-off from HR stakeholders on the ServiceNow-Workday integration before go-live.",
-            "comment": {"comments": []}
+            "comment": {"comments": []},
+            "last_comment_text": ""
         }
     },
-    # Overdue 3 days — AT RISK, no updates
     {
         "key": "PLAT-104",
         "fields": {
@@ -59,7 +59,8 @@ FAKE_ISSUES = [
             "assignee": {"displayName": "Sara Williams", "emailAddress": "sara.w@demo.com"},
             "labels": [],
             "description": "Full decommission of legacy CMDB system. Migration of 15k CIs to ServiceNow CSDM. Dependency on Network team for CI discovery completion.",
-            "comment": {"comments": []}
+            "comment": {"comments": []},
+            "last_comment_text": "Waiting on Network team to complete CI discovery scan. They are backlogged until next sprint. No ETA confirmed."
         }
     },
     {
@@ -73,10 +74,10 @@ FAKE_ISSUES = [
             "assignee": {"displayName": "Derek Johnson", "emailAddress": "derek.j@demo.com"},
             "labels": [],
             "description": "Implement zero-trust network segmentation for production environment. Blocked pending security architecture review from CISO office.",
-            "comment": {"comments": []}
+            "comment": {"comments": []},
+            "last_comment_text": "Security architecture review has not been scheduled yet. CISO office is OOO this week. Need someone to escalate internally."
         }
     },
-    # On track — future due dates
     {
         "key": "PLAT-105",
         "fields": {
@@ -88,7 +89,8 @@ FAKE_ISSUES = [
             "assignee": {"displayName": "Alex Chen", "emailAddress": "alex.chen@demo.com"},
             "labels": [],
             "description": "Integrate Microsoft Copilot AI with ServiceNow to auto-suggest incident resolution steps.",
-            "comment": {"comments": []}
+            "comment": {"comments": []},
+            "last_comment_text": ""
         }
     },
     {
@@ -102,15 +104,22 @@ FAKE_ISSUES = [
             "assignee": {"displayName": "Maria Lopez", "emailAddress": "maria.lopez@demo.com"},
             "labels": [],
             "description": "Analyze and rightsize underutilized cloud resources across AWS and Azure to reduce monthly spend by 20%.",
-            "comment": {"comments": []}
+            "comment": {"comments": []},
+            "last_comment_text": ""
         }
     },
 ]
 
 
 def get_fake_last_comment(issue_key):
-    # Overdue tickets have no recent comments
     return None
+
+
+def get_fake_last_comment_text(issue_key):
+    for issue in FAKE_ISSUES:
+        if issue["key"] == issue_key:
+            return issue["fields"].get("last_comment_text", "")
+    return ""
 
 
 FAKE_CONFIG = {
@@ -132,6 +141,7 @@ FAKE_CONFIG = {
     "schedule": {
         "timezone": "America/Los_Angeles",
         "reminder_hour": 8,
-        "escalation_days_overdue": 2
+        "escalation_days_overdue": 2,
+        "escalation_cooldown_days": 7
     }
 }
